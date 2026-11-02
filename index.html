@@ -22,7 +22,7 @@
         <h2>മൽഹാർ ഒറ്റച്ചോദ്യം</h2>
         <form id="quizForm">
             <label> ഉത്തരം സമർപ്പിക്കുന്ന ആളിന്റെ പേര്:</label>
-            <input type="text" name="authorName" placeholder="നിങ്ങളുടെ പേര് നൽകുക" required>
+            <input type="text" id="nameInput" name="authorName" placeholder="നിങ്ങളുടെ പേര് നൽകുക" required>
 
             <label>ഉത്തരം:</label>
             <input type="text" id="answerInput" name="answer" placeholder="ഉത്തരം ഇവിടെ നൽകുക" required>
@@ -33,7 +33,7 @@
     </div>
 
     <script>
-        // ഇവിടെ നിങ്ങളുടെ ശരിയായ ഉത്തരങ്ങൾ നൽകുക
+        // ഇവിടെ നിങ്ങളുടെ ശരിയായ ഉത്തരങ്ങൾ നൽകുക (എത്ര വേണമെങ്കിലും ചേർക്കാം)
         const CORRECT_ANSWERS = [
             "ശരി",
             "Correct",
@@ -51,34 +51,46 @@
             // ഉത്തരം ശരിയാണോ എന്ന് പരിശോധിക്കുന്നു
             const isCorrect = CORRECT_ANSWERS.some(ans => ans.toLowerCase() === userAnswer);
 
-            if (isCorrect) {
-                messageDiv.textContent = "അഭിനന്ദനങ്ങൾ! ഉത്തരം ശരിയാണ്.";
-                messageDiv.className = "success";
-                messageDiv.style.display = "block";
-                
+            // ഡാറ്റ Google Sheet-ലേക്ക് അയക്കാനുള്ള ഫങ്ക്ഷൻ
+            const sendDataToSheet = async () => {
                 submitBtn.disabled = true;
                 submitBtn.textContent = "അയക്കുന്നു...";
-
                 try {
                     await fetch('https://script.google.com/macros/s/AKfycbw25I2awh-nXA5KYOqwMkPS9tPNcy2eLXhIj2oXW1LPbfip1QYIdHpQoDaQLv8uci7tAw/exec', {
                         method: 'POST',
                         body: formData,
                         mode: 'no-cors' 
                     });
-                    
-                    document.getElementById('quizForm').reset();
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = "സമർപ്പിക്കുക (Submit)";
-
                 } catch (error) {
-                    alert("ഡാറ്റ അയക്കുന്നതിൽ പിശക് സംഭവിച്ചു.");
+                    console.error("Error:", error);
+                } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = "സമർപ്പിക്കുക (Submit)";
                 }
+            };
+
+            if (isCorrect) {
+                // ശരിയായ ഉത്തരം
+                messageDiv.textContent = "അഭിനന്ദനങ്ങൾ! ഉത്തരം ശരിയാണ്.";
+                messageDiv.className = "success";
+                messageDiv.style.display = "block";
+                
+                // ഡാറ്റ അയച്ച ശേഷം ഫോം പൂർണ്ണമായി റീസെറ്റ് ചെയ്യുന്നു
+                await sendDataToSheet();
+                document.getElementById('quizForm').reset();
+
             } else {
+                // തെറ്റായ ഉത്തരം
                 messageDiv.textContent = "ക്ഷമിക്കണം, വീണ്ടും ശ്രമിക്കൂ..";
                 messageDiv.className = "error";
                 messageDiv.style.display = "block";
+                
+                // തെറ്റായ ഉത്തരവും ഷീറ്റിലേക്ക് അയക്കുന്നു (ശ്രമങ്ങൾ കണക്കാക്കാൻ)
+                await sendDataToSheet();
+
+                // ഉത്തരം മാത്രം കാലിയാക്കി കർസർ അങ്ങോട്ട് നീക്കുന്നു
+                document.getElementById('answerInput').value = '';
+                document.getElementById('answerInput').focus();
             }
         });
     </script>
