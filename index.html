@@ -34,7 +34,13 @@
 
     <script>
         // ഇവിടെ ശരിയായ ഉത്തരം നൽകുക (ഇംഗ്ലീഷ്/മലയാളം എന്തും ആകാം)
-        const CORRECT_ANSWER = "ശരിയായ ഉത്തരം"; 
+        const CORRECT_ANSWERS = [
+            "രവി",
+            "ലാബ്",
+            "മൽഹാർ",
+            "മല്ഹാർ",
+            "Malhar"// സ്പെല്ലിംഗ് വ്യത്യാസങ്ങൾ ഉണ്ടെങ്കിൽ കൂടി ചേർക്കാം
+        ]; 
 
         document.getElementById('quizForm').addEventListener('submit', async function(e) {
             e.preventDefault();
