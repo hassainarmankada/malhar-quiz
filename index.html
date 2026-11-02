@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>മൽഹാർ ഒറ്റച്ചോദ്യം</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; background-color: #f9f9f9; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #555; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0 15px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.3s; }
+        button:hover { background-color: #45a049; }
+        #message { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; text-align: center; font-weight: bold; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>മൽഹാർ ഒറ്റച്ചോദ്യം</h2>
+        <form id="quizForm">
+            <label> ഉത്തരം സമർപ്പിക്കുന്ന ആളിന്റെ പേര്:</label>
+            <input type="text" name="authorName" placeholder="നിങ്ങളുടെ പേര് നൽകുക" required>
+
+            <label>ഉത്തരം:</label>
+            <input type="text" id="answerInput" name="answer" placeholder="ഉത്തരം ഇവിടെ നൽകുക" required>
+
+            <button type="submit" id="submitBtn">സമർപ്പിക്കുക (Submit)</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // ഇവിടെ ശരിയായ ഉത്തരം നൽകുക (ഇംഗ്ലീഷ്/മലയാളം എന്തും ആകാം)
+        const CORRECT_ANSWER = "ശരിയായ ഉത്തരം"; 
+
+        document.getElementById('quizForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userAnswer = document.getElementById('answerInput').value.trim();
+            const messageDiv = document.getElementById('message');
+            const submitBtn = document.getElementById('submitBtn');
+            const formData = new FormData(this);
+
+            // ഉത്തരം പരിശോധിക്കുക
+            if (userAnswer === CORRECT_ANSWER) {
+                // ശരിയായ ഉത്തരം: സന്ദേശം കാണിക്കുക
+                messageDiv.textContent = "അഭിനന്ദനങ്ങൾ! ഉത്തരം ശരിയാണ്.";
+                messageDiv.className = "success";
+                messageDiv.style.display = "block";
+                
+                // അയക്കുന്ന സമയത്ത് ബട്ടൺ ഡിസേബിൾ ചെയ്യുക (ആവർത്തിച്ചുള്ള ക്ലിക്ക് ഒഴിവാക്കാൻ)
+                submitBtn.disabled = true;
+                submitBtn.textContent = "അയക്കുന്നു...";
+
+                // ഡാറ്റ Google Apps Script വെബ് ആപ്പിലേക്ക് അയക്കുക
+                try {
+                    const response = await fetch('https://script.google.com/macros/s/AKfycbzJg4BwOzcsyppzBgDMzCml__ZgteMoHYrt_Kpxof05v2uGF7Cd2Xj2CP02SVuEYBrzYQ/exec', {
+                        method: 'POST',
+                        body: formData,
+                        // CORS പ്രശ്നങ്ങൾ ഒഴിവാക്കാൻ 'no-cors' മോഡ് ഉപയോഗിക്കുന്നു
+                        mode: 'no-cors' 
+                    });
+                    
+                    console.log('Data submitted successfully to Google Sheet');
+                    
+                    // വിജയകരമായി അയച്ച ശേഷം ഫോം റീസെറ്റ് ചെയ്യുക
+                    document.getElementById('quizForm').reset();
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "സമർപ്പിക്കുക (Submit)";
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert("ഡാറ്റ അയക്കുന്നതിൽ പിശക് സംഭവിച്ചു. ഇന്റർനെറ്റ് കണക്ഷൻ പരിശോധിക്കുക.");
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "സമർപ്പിക്കുക (Submit)";
+                }
+            } else {
+                // തെറ്റായ ഉത്തരം: സന്ദേശം കാണിക്കുക, ഡാറ്റ അയക്കേണ്ടതില്ല
+                messageDiv.textContent = "ക്ഷമിക്കണം, വീണ്ടും ശ്രമിക്കൂ..";
+                messageDiv.className = "error";
+                messageDiv.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>
