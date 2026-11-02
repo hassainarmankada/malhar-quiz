@@ -260,12 +260,16 @@
             "Sini a.k",
             "A.K. Sini",
             "AK Sini",
+            "A.K. sini",
             "Siny"
         ]; 
 
-        // ഉത്തരം വൃത്തിയാക്കാനുള്ള ഫങ്ക്ഷൻ (സ്പെയ്സ്, കോമ, ഫുൾസ്റ്റോപ്പ് എന്നിവ ഒഴിവാക്കുന്നു)
+        // ഉത്തരം വൃത്തിയാക്കാനുള്ള ഫങ്ക്ഷൻ
         function cleanAnswer(str) {
-            return str.toLowerCase().replace(/[\s.,]/g, '');
+            // ഫുൾസ്റ്റോപ്പിന് ശേഷമുള്ള സ്പെയ്സ് മാത്രം ഒഴിവാക്കാൻ (ഉദാ: "എ. ബി" -> "എ.ബി")
+            let cleaned = str.toLowerCase().replace(/\.\s+/g, '.');
+            // എന്നിട്ട് ബാക്കിയുള്ള എല്ലാ സ്പെയ്സുകളും, കോമകളും, ഫുൾസ്റ്റോപ്പുകളും ഒഴിവാക്കി താരതമ്യം ചെയ്യുക
+            return cleaned.replace(/[\s.,]/g, '');
         }
 
         document.getElementById('quizForm').addEventListener('submit', async function(e) {
