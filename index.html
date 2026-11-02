@@ -33,58 +33,49 @@
     </div>
 
     <script>
-        // ഇവിടെ ശരിയായ ഉത്തരം നൽകുക (ഇംഗ്ലീഷ്/മലയാളം എന്തും ആകാം)
+        // ഇവിടെ നിങ്ങളുടെ ശരിയായ ഉത്തരങ്ങൾ നൽകുക
         const CORRECT_ANSWERS = [
-            "രവി",
-            "ലാബ്",
-            "മൽഹാർ",
-            "മല്ഹാർ",
-            "Malhar"// സ്പെല്ലിംഗ് വ്യത്യാസങ്ങൾ ഉണ്ടെങ്കിൽ കൂടി ചേർക്കാം
+            "ശരി",
+            "Correct",
+            "ഉത്തരം"
         ]; 
 
         document.getElementById('quizForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const userAnswer = document.getElementById('answerInput').value.trim();
+            const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
             const messageDiv = document.getElementById('message');
             const submitBtn = document.getElementById('submitBtn');
             const formData = new FormData(this);
 
-            // ഉത്തരം പരിശോധിക്കുക
-            if (userAnswer === CORRECT_ANSWER) {
-                // ശരിയായ ഉത്തരം: സന്ദേശം കാണിക്കുക
+            // ഉത്തരം ശരിയാണോ എന്ന് പരിശോധിക്കുന്നു
+            const isCorrect = CORRECT_ANSWERS.some(ans => ans.toLowerCase() === userAnswer);
+
+            if (isCorrect) {
                 messageDiv.textContent = "അഭിനന്ദനങ്ങൾ! ഉത്തരം ശരിയാണ്.";
                 messageDiv.className = "success";
                 messageDiv.style.display = "block";
                 
-                // അയക്കുന്ന സമയത്ത് ബട്ടൺ ഡിസേബിൾ ചെയ്യുക (ആവർത്തിച്ചുള്ള ക്ലിക്ക് ഒഴിവാക്കാൻ)
                 submitBtn.disabled = true;
                 submitBtn.textContent = "അയക്കുന്നു...";
 
-                // ഡാറ്റ Google Apps Script വെബ് ആപ്പിലേക്ക് അയക്കുക
                 try {
-                    const response = await fetch('https://script.google.com/macros/s/AKfycbzJg4BwOzcsyppzBgDMzCml__ZgteMoHYrt_Kpxof05v2uGF7Cd2Xj2CP02SVuEYBrzYQ/exec', {
+                    await fetch('https://script.google.com/macros/s/AKfycbzJg4BwOzcsyppzBgDMzCml__ZgteMoHYrt_Kpxof05v2uGF7Cd2Xj2CP02SVuEYBrzYQ/exec', {
                         method: 'POST',
                         body: formData,
-                        // CORS പ്രശ്നങ്ങൾ ഒഴിവാക്കാൻ 'no-cors' മോഡ് ഉപയോഗിക്കുന്നു
                         mode: 'no-cors' 
                     });
                     
-                    console.log('Data submitted successfully to Google Sheet');
-                    
-                    // വിജയകരമായി അയച്ച ശേഷം ഫോം റീസെറ്റ് ചെയ്യുക
                     document.getElementById('quizForm').reset();
                     submitBtn.disabled = false;
                     submitBtn.textContent = "സമർപ്പിക്കുക (Submit)";
 
                 } catch (error) {
-                    console.error('Error:', error);
-                    alert("ഡാറ്റ അയക്കുന്നതിൽ പിശക് സംഭവിച്ചു. ഇന്റർനെറ്റ് കണക്ഷൻ പരിശോധിക്കുക.");
+                    alert("ഡാറ്റ അയക്കുന്നതിൽ പിശക് സംഭവിച്ചു.");
                     submitBtn.disabled = false;
                     submitBtn.textContent = "സമർപ്പിക്കുക (Submit)";
                 }
             } else {
-                // തെറ്റായ ഉത്തരം: സന്ദേശം കാണിക്കുക, ഡാറ്റ അയക്കേണ്ടതില്ല
                 messageDiv.textContent = "ക്ഷമിക്കണം, വീണ്ടും ശ്രമിക്കൂ..";
                 messageDiv.className = "error";
                 messageDiv.style.display = "block";
