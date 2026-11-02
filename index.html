@@ -292,7 +292,10 @@
                 submitBtn.disabled = true;
                 submitBtn.textContent = "അയക്കുന്നു...";
                 try {
-                    await fetch('https://script.google.com/macros/s/AKfycbw25I2awh-nXA5KYOqwMkPS9tPNcy2eLXhIj2oXW1LPbfip1QYIdHpQoDaQLv8uci7tAw/exec', {
+                    // ശരി/തെറ്റ് എന്ന വിവരം ഫോം ഡാറ്റയിലേക്ക് ചേർക്കുന്നു
+                    formData.append('status', isCorrect ? 'Correct' : 'Wrong');
+
+                    await fetch('https://script.google.com/macros/s/AKfycbyaH26qnArE8VxcAyCYrXQKeOCOYnIpIHuXZ2ejl_M34bj3j6HkPYmVvEsPKC9QLbhk/exec', {
                         method: 'POST',
                         body: formData,
                         mode: 'no-cors' 
