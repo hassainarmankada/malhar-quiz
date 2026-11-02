@@ -250,27 +250,37 @@
             "സിനി ഏ.കെ",
             "Sini A.K",
             "സിനി",
-             "സിനി.",
-              "Sini",
-              "sini",
-              "sini a.k",
-              "sini ak",
-              "sini a k",
-              "Sini a.k",
-              "Siny",           
+            "സിനി.",
+             "എ.കെ. സിനി",             
+            "Sini",
+            "sini",
+            "sini a.k",
+            "sini ak",
+            "sini a k",
+            "Sini a.k",
+            "A.K. Sini",
+            "AK Sini",
+            "Siny"
         ]; 
+
+        // ഉത്തരം വൃത്തിയാക്കാനുള്ള ഫങ്ക്ഷൻ (സ്പെയ്സ്, കോമ, ഫുൾസ്റ്റോപ്പ് എന്നിവ ഒഴിവാക്കുന്നു)
+        function cleanAnswer(str) {
+            return str.toLowerCase().replace(/[\s.,]/g, '');
+        }
 
         document.getElementById('quizForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const answerInput = document.getElementById('answerInput');
-            const userAnswer = answerInput.value.trim().toLowerCase();
             const messageDiv = document.getElementById('message');
             const submitBtn = document.getElementById('submitBtn');
             const formData = new FormData(this);
 
+            // യൂസർ നൽകിയ ഉത്തരം വൃത്തിയാക്കുന്നു
+            const userAnswerClean = cleanAnswer(answerInput.value);
+
             // ഉത്തരം ശരിയാണോ എന്ന് പരിശോധിക്കുന്നു
-            const isCorrect = CORRECT_ANSWERS.some(ans => ans.toLowerCase() === userAnswer);
+            const isCorrect = CORRECT_ANSWERS.some(ans => cleanAnswer(ans) === userAnswerClean);
 
             // ഡാറ്റ Google Sheet-ലേക്ക് അയക്കാനുള്ള ഫങ്ക്ഷൻ
             const sendDataToSheet = async () => {
