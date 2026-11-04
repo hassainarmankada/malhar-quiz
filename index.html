@@ -349,6 +349,9 @@
 
             suggestionsBox.style.display = 'none';
 
+            // ടൈപ്പ് ചെയ്ത ഉത്തരത്തിലെ തുടക്കത്തിലെയും അവസാനത്തെയും സ്പെയ്സ് ഒഴിവാക്കുന്നു
+            const userInputTrimmed = answerInput.value.trim();
+
             // വൃത്തിയാക്കിയ ഉത്തരം എടുക്കുന്നു
             const userAnswerClean = cleanAnswer(answerInput.value);
             
