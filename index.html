@@ -14,7 +14,6 @@
 
         body { 
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
-            /* മനോഹരമായ ഗ്രേഡിയന്റ് ബാക്ക്ഗ്രൗണ്ട് */
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -36,7 +35,6 @@
             animation: slideUp 0.6s ease-out;
         }
 
-        /* മുകളിൽ ഒരു മനോഹരമായ വർണ്ണ വര */
         .container::before {
             content: '';
             position: absolute;
@@ -86,11 +84,40 @@
             box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
         }
 
-        /* ഉത്തരം തെറ്റാകുമ്പോൾ ഇൻപുട്ട് ബോക്സ് ചുവപ്പാകാൻ */
         input.error-input {
             border-color: #f8d7da;
             background-color: #fff5f5;
             animation: shake 0.4s;
+        }
+
+        /* Suggestion Box Styles */
+        .suggestions-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .suggestion-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 15px;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f0f4ff;
+            color: #667eea;
         }
 
         button { 
@@ -144,7 +171,6 @@
             border-left: 5px solid #dc3545;
         }
 
-        /* ആനിമേഷനുകൾ */
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -200,21 +226,6 @@
             button { font-size: 17px; padding: 14px; }
             #message { font-size: 16px; overflow-wrap: anywhere; }
         }
-
-        @media (max-height: 500px) and (orientation: landscape) {
-            body { align-items: flex-start; }
-            .container { margin-top: 8px; margin-bottom: 8px; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
-        }
-
     </style>
 </head>
 <body>
@@ -234,7 +245,9 @@
                 <input type="text" id="answerInput" name="answer"
                        placeholder="ഉത്തരം ഇവിടെ നൽകുക" required
                        lang="ml" inputmode="text" enterkeyhint="done"
-                       autocapitalize="off" spellcheck="false">
+                       autocapitalize="off" spellcheck="false" autocomplete="off">
+                <!-- സജഷനുകൾ കാണിക്കാനുള്ള ബോക്സ് -->
+                <div id="suggestionsBox" class="suggestions-box"></div>
             </div>
 
             <button type="submit" id="submitBtn">സമർപ്പിക്കുക (Submit)</button>
@@ -243,60 +256,113 @@
     </div>
 
     <script>
-        // ഇവിടെ നിങ്ങളുടെ ശരിയായ ഉത്തരങ്ങൾ നൽകുക (എത്ര വേണമെങ്കിലും ചേർക്കാം)
+        // ഇവിടെ നിങ്ങളുടെ ശരിയായ ഉത്തരങ്ങൾ നൽകുക
         const CORRECT_ANSWERS = [
-    "സിനി എ.കെ",
-    "സിനി. എ.കെ",
-    "സിനി ഏ.കെ",
-    "Sini A.K",
-    "സിനി",
-    "സിനി.",
-    "എ.കെ. സിനി",             
-    "Sini",
-    "sini",
-    "sini a.k",
-    "sini ak",
-    "sini a k",
-    "Sini a.k",
-    "A.K. Sini",
-    "AK Sini",
-    "A.K. sini",
-    "Siny",
-    "സിനി AK", // ഇത് പുതിയതായി ചേർത്തു
-    "Sini AK", // ഇത് പുതിയതായി ചേർത്തു
-    "sini ak"  // ഇത് പുതിയതായി ചേർത്തു
-    ];
-        // ഉത്തരം വൃത്തിയാക്കാനുള്ള ഫങ്ക്ഷൻ
+            "എം.ടി.",
+            "എം.ടി",
+            "എം ടി",
+            "എംടി",
+            "എം. ടി.",
+            "M.T.",
+            "MT",
+            "M T",
+            "എം.ടി. വാസുദേവൻ നായർ",
+            "എം.ടി.വാസുദേവൻ നായർ",
+            "എം ടി വാസുദേവൻ നായർ",
+            "എംടി വാസുദേവൻ നായർ",
+            "M.T. Vasudevan Nair",
+            "MT Vasudevan Nair",
+            "M T Vasudevan Nair",
+            "വാസുദേവൻ എം.ടി.",
+            "വാസുദേവൻ എം.ടി",
+            "വാസുദേവൻ എം ടി",
+            "വാസുദേവൻ എംടി",
+            "Vasudevan M.T.",
+            "Vasudevan MT",
+            "വാസുദേവൻ നായർ",
+            "വാസുദേവൻനായർ",
+            "Vasudevan Nair"
+        ];
+
+        const answerInput = document.getElementById('answerInput');
+        const suggestionsBox = document.getElementById('suggestionsBox');
+
+        // പുതിയ ലോജിക് പ്രകാരം ഉത്തരം വൃത്തിയാക്കാനുള്ള ഫങ്ക്ഷൻ
         function cleanAnswer(str) {
-            // 1. toLowerCase() ഉപയോഗിച്ച് എല്ലാ അക്ഷരങ്ങളും ചെറിയ അക്ഷരങ്ങളാക്കി മാറ്റുന്നു (Capital/Small വ്യത്യാസം ഒഴിവാക്കാൻ)
-            // 2. ഫുൾസ്റ്റോപ്പിന് ശേഷമുള്ള സ്പെയ്സ് മാത്രം ഒഴിവാക്കാൻ (ഉദാ: "എ. ബി" -> "എ.ബി")
-            let cleaned = str.toLowerCase().replace(/\.\s+/g, '.');
-            // 3. ബാക്കിയുള്ള എല്ലാ സ്പെയ്സുകളും, കോമകളും, ഫുൾസ്റ്റോപ്പുകളും ഒഴിവാക്കി താരതമ്യം ചെയ്യുക
-            return cleaned.replace(/[\s.,]/g, '');
+            return str.toLowerCase()              // 1. എല്ലാം ചെറിയ അക്ഷരങ്ങളാക്കുന്നു
+                      .replace(/[.,]/g, '')       // 2. എല്ലാ ഫുൾസ്റ്റോപ്പുകളും കോമകളും ഒഴിവാക്കുന്നു
+                      .replace(/\s+/g, ' ')       // 3. അധിക സ്പെയ്സുകൾ ഒരു സ്പെയ്സ് ആക്കുന്നു
+                      .trim();                    // 4. തുടക്കത്തിലെയും അവസാനത്തെയും സ്പെയ്സുകൾ ഒഴിവാക്കുന്നു
         }
 
+        // സജഷനുകൾ കാണിക്കാനുള്ള ഫങ്ക്ഷൻ
+        function showSuggestions(value) {
+            // കുറഞ്ഞത് 5 അക്ഷരങ്ങൾ ടൈപ്പ് ചെയ്താൽ മാത്രം സജഷൻ കാണിക്കുക
+            if (!value || value.length < 5) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+
+            // യൂസർ നൽകിയ അക്ഷരങ്ങൾ കൊണ്ട് തുടങ്ങുന്ന (Starts with) ഉത്തരങ്ങൾ കണ്ടെത്തുന്നു
+            const filtered = CORRECT_ANSWERS.filter(ans => 
+                ans.toLowerCase().startsWith(value.toLowerCase())
+            );
+
+            if (filtered.length > 0) {
+                suggestionsBox.innerHTML = '';
+                filtered.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.textContent = item;
+                    
+                    // ഒരു സജഷനിൽ ക്ലിക്ക് ചെയ്യുമ്പോൾ ഇൻപുട്ട് ബോക്സിൽ അത് നിറയ്ക്കണം
+                    div.addEventListener('click', function() {
+                        answerInput.value = item;
+                        suggestionsBox.style.display = 'none';
+                        answerInput.focus();
+                    });
+                    suggestionsBox.appendChild(div);
+                });
+                suggestionsBox.style.display = 'block';
+            } else {
+                suggestionsBox.style.display = 'none';
+            }
+        }
+
+        // ടൈപ്പ് ചെയ്യുമ്പോൾ സജഷൻ ലിസ്റ്റ് അപ്ഡേറ്റ് ചെയ്യാൻ
+        answerInput.addEventListener('input', function() {
+            this.classList.remove('error-input');
+            showSuggestions(this.value.trim());
+        });
+
+        // പുറത്ത് എവിടെയെങ്കിലും ക്ലിക്ക് ചെയ്താൽ സജഷൻ ബോക്സ് അടയ്ക്കാൻ
+        document.addEventListener('click', function(e) {
+            if (e.target !== answerInput && e.target !== suggestionsBox) {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+
+        // ഫോം സബ്മിറ്റ് ചെയ്യുമ്പോൾ
         document.getElementById('quizForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const answerInput = document.getElementById('answerInput');
             const messageDiv = document.getElementById('message');
             const submitBtn = document.getElementById('submitBtn');
             const formData = new FormData(this);
 
-            // യൂസർ നൽകിയ ഉത്തരം വൃത്തിയാക്കുന്നു
-            const userAnswerClean = cleanAnswer(answerInput.value);
+            suggestionsBox.style.display = 'none';
 
-            // ഉത്തരം ശരിയാണോ എന്ന് പരിശോധിക്കുന്നു
+            // വൃത്തിയാക്കിയ ഉത്തരം എടുക്കുന്നു
+            const userAnswerClean = cleanAnswer(answerInput.value);
+            
+            // ഉത്തരവുമായി ഒത്തുപോകുന്നുണ്ടോ എന്ന് പരിശോധിക്കുന്നു
             const isCorrect = CORRECT_ANSWERS.some(ans => cleanAnswer(ans) === userAnswerClean);
 
-            // ഡാറ്റ Google Sheet-ലേക്ക് അയക്കാനുള്ള ഫങ്ക്ഷൻ
             const sendDataToSheet = async () => {
                 submitBtn.disabled = true;
                 submitBtn.textContent = "അയക്കുന്നു...";
                 try {
-                    // ശരി/തെറ്റ് എന്ന വിവരം ഫോം ഡാറ്റയിലേക്ക് ചേർക്കുന്നു
                     formData.append('status', isCorrect ? 'Correct' : 'Wrong');
-
                     await fetch('https://script.google.com/macros/s/AKfycbyaH26qnArE8VxcAyCYrXQKeOCOYnIpIHuXZ2ejl_M34bj3j6HkPYmVvEsPKC9QLbhk/exec', {
                         method: 'POST',
                         body: formData,
@@ -311,39 +377,25 @@
             };
 
             if (isCorrect) {
-                // ശരിയായ ഉത്തരം
                 answerInput.classList.remove('error-input');
                 messageDiv.textContent = "അഭിനന്ദനങ്ങൾ! ഉത്തരം ശരിയാണ്.";
                 messageDiv.className = "success";
                 messageDiv.style.display = "block";
                 
                 await sendDataToSheet();
-                
-                // ശരിയായ ഉത്തരം നൽകിയാൽ മാത്രം ഫോം പൂർണ്ണമായി റീസെറ്റ് ചെയ്യുന്നു
                 document.getElementById('quizForm').reset();
 
             } else {
-                // തെറ്റായ ഉത്തരം
                 messageDiv.textContent = "ക്ഷമിക്കണം, വീണ്ടും ശ്രമിക്കൂ..";
                 messageDiv.className = "error";
                 messageDiv.style.display = "block";
                 
-                // ഉത്തരം തെറ്റാണെന്ന് കാണിക്കാൻ ഇൻപുട്ട് ബോക്സിന് ചുവപ്പ് നിറം നൽകുന്നു
                 answerInput.classList.add('error-input');
-                
-                // തെറ്റായ ഉത്തരവും ഷീറ്റിലേക്ക് അയക്കുന്നു
                 await sendDataToSheet();
 
-                // ഉത്തരം മാത്രം കാലിയാക്കി കർസർ അങ്ങോട്ട് നീക്കുന്നു 
-                // (nameInput കാലിയാക്കുന്നില്ല, അതിനാൽ പേര് അതേപടി നിൽക്കും)
                 answerInput.value = '';
                 answerInput.focus();
             }
-        });
-
-        // ടൈപ്പ് ചെയ്യുമ്പോൾ ചുവപ്പ് നിറം മാറാൻ
-        document.getElementById('answerInput').addEventListener('input', function() {
-            this.classList.remove('error-input');
         });
     </script>
 </body>
